@@ -1,0 +1,29 @@
+/* Font */
+/* @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap'); */
+@import url('https://fonts.googleapis.com/css2?family=Inter&display=swap');
+
+/* CSS - RESET */
+
+body, div, a, p, h1, h2, ul, li, blockquote, input {
+  padding: 0px;
+  margin: 0px;
+  border: 0px;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', sans-serif; /* Fonte 2 de 2 - Chamamos aqui a fonte, se o sistema do cara não tiver, carregaremos qualquer serifada que ele tiver instalada no sistema dele. */
+}
+
+li {
+  list-style: none;
+}
+
+a {
+  text-decoration: none;
+}
+
+button {
+  outline: none;
+  border: none;
+}
