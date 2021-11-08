@@ -1,0 +1,11 @@
+{
+  "Useful Links": {
+    "GraphQL Hooks Docs": "https://github.com/nearform/graphql-hooks",
+    "GraphQL Hooks Docs+": "https://www.nearform.com/blog/introducing-graphql-hooks/",
+    "GraphQL Hooks Pagination": "https://github.com/nearform/graphql-hooks/blob/master/README.md#Pagination",
+    "GraphQL Pagination Docs": "https://graphql.org/learn/pagination/",
+    "Apollo Docs": "https://www.apollographql.com/docs/react/pagination/core-api/",
+    "MUI Pagination Docs": "https://mui.com/components/pagination/",
+    "JSON Formatter": "https://jsonformatter.curiousconcept.com/"
+  }
+}

@@ -1,8 +1,15 @@
+import React, { useState, useEffect, KeyboardEvent, MouseEvent, Fragment } from 'react';
 import styled from 'styled-components'
+import './index.css'
+
+/* Other libs and icons */
 import { BsSearch } from 'react-icons/bs'
 import Hamburger from 'hamburger-react'
-import { useState } from 'react'
-import './index.css'
+
+/* Filter + Context */
+import { TemporaryDrawer } from './components/TemporaryDrawer';
+import { ProductContext } from './providers/product'
+import { ProductContextType } from './providers//product'
 
 /* Sort[1] */
 import { Select, SelectChangeEvent } from '@material-ui/core'
@@ -10,81 +17,84 @@ import { InputLabel } from '@material-ui/core'
 import { MenuItem } from '@material-ui/core'
 import { FormControl } from '@material-ui/core'
 
-/* Filter */
-import { TemporaryDrawer } from './components/TemporaryDrawer';
+// Closes: TemporaryDrawer
 
-/* Rating */
+/* Material UI */
+import { Stack } from '@material-ui/core' // base container
 import { Rating } from '@material-ui/core'
-import { Stack } from '@material-ui/core'
+import { Pagination } from '@material-ui/core' // [Pag 1]
 
-/* images */
-// import Miscellaneous from '../produtos/image.png';
-// import Shoes from '../produtos/image1.png';
-// import Typewriter from '../produtos/image2.png';
-// import Drink from '../produtos/image3.png';
-// import Charger from '../produtos/image4.png';
-// import Gift from '../produtos/image5.png';
+/* DATO CMS */
+import { useQuery } from "graphql-hooks";
+const PRODUCTS_QUERY = `query Products($first: IntType, $skip: IntType) {
+  allProducts(first: $first, skip: $skip) {
+    id
+    title
+    productImage {
+      url(imgixParams: {fm: jpg })
+    }
+    description
+    rating
+    price
+  }
+}`;
 
 const App = () => {
   const [hamburgerOpen, setHamburgerOpen] = useState(false);
 
   const [sort, setSort] = useState('');
   const handleSorting = (event: SelectChangeEvent) => setSort(event.target.value);
-
-  /* Product */
-  const productInfo = [
-    {
-      "title": "Miscellaneous",
-      "image": '../produtos/image.png', // to search the image dynamically it needs to be in the public folder (which is ommited here) instead of doing ..public/produtos, we do ../produtos (it already considers we are inside the public folder)
-      "description": "This is a long title name containing lots of words",
-      "rating": 1,
-      "price": 12.48,
-    },
-    {
-      "title": "Shoes",
-      "image": '../produtos/image1.png', 
-      "description": "This is a long title name containing lots of words",
-      "rating": 2,
-      "price": 13.48,
-    },
-    {
-      "title": "Typewriter",
-      "image": '../produtos/image2.png', 
-      "description": "This is a long title name containing lots of words",
-      "rating": 3,
-      "price": 14.48,
-    },
-    {
-      "title": "Drink",
-      "image": '../produtos/image3.png', 
-      "description": "This is a long title name containing lots of words",
-      "rating": 4,
-      "price": 15.48,
-    },
-    {
-      "title": "Charger",
-      "image": '../produtos/image4.png', 
-      "description": "This is a long title name containing lots of words",
-      "rating": 4.5,
-      "price": 16.48,
-    },
-    {
-      "title": "Gift",
-      "image": '../produtos/image5.png', 
-      "description": "This is a long title name containing lots of words",
-      "rating": 4.75,
-      "price": 17.48,
-    },
-  ]
+  
+  const { productsList, setProductsList } = React.useContext(ProductContext) as ProductContextType;
 
   /* Card */
   const [qty, setQty] = useState('1');
   const handleQty = (event: SelectChangeEvent) => setQty(event.target.value);
 
-  return (
-    <Container id="container" className="dev">
+  /* DATO CMS + Pagination */
+  const [skipCount, setSkipCount] = useState(0) 
+  const [objsPerPage, setObjsPerPage] = useState(6) // there are 14 objects. It should return 2 pages with 6 + 1 page with 1.
+  const [currentPage, setCurrentPage] = useState(1)
 
-      <Header className="dev">
+  const { loading, error, data } = useQuery(PRODUCTS_QUERY, {
+    variables: {
+      first: objsPerPage, // How many objects to return
+      skip: skipCount, // Offset at which to start
+    }
+  });
+
+  // QA
+  if (error) return <div>There was an error!</div>
+  if (loading && !data) return <div>Loading</div>
+
+  // saving query data to variable +/ creating pagination logic
+  // const { allProducts, _allProductsMeta } = data
+
+  const handlePage = (event: React.ChangeEvent<unknown>, value: number) => {
+    setCurrentPage(value);
+    const newValue = value - 1;
+    const newSkip = newValue * objsPerPage;
+    setSkipCount(newSkip);
+    // [code pagination] neste momento o useQuery executa novamente e salva dentro de allProducts o novo valor. Se eu passar um setProducts do state, ele não atualiza.
+  }
+
+  const testProductArray = [
+    {
+        "id":"70788059",
+        "title":"Forest Gump Shoes",
+        "productImage":{
+          "url":"https://www.datocms-assets.com/58030/1636297575-image1.png?fm=jpg"
+        },
+        "description":"amazing forest gump shoes",
+        "rating":2,
+        "price":13.48
+    },
+  ]
+
+  return (
+    <Container id="container">
+
+      <Header>
         <SearchBar id="search-bar">
           <SearchInput id="search-input"/>
           <SearchButton id="search-button" type="submit">
@@ -96,7 +106,7 @@ const App = () => {
       </Header>
 
       <FilterContainer>
-        <FormControl className="dev" sx={{ width: 164 }}>
+        <FormControl sx={{ width: 164 }}>
           <InputLabel id="demo-simple-select-helper-label">SORT BY</InputLabel>
           <Select
             labelId="demo-simple-select-helper-label"
@@ -109,24 +119,26 @@ const App = () => {
           </Select>
         </FormControl>
 
-        <FilterActions className="dev">
+        <FilterActions>
           <TemporaryDrawer />
         </FilterActions>
       </FilterContainer>
 
+      <button onClick={() => setProductsList(testProductArray)}>teste</button>
       <CardContainer>
-        { productInfo.map((product: any, index: any) => (
-          <Card>
-            <CardImage src={productInfo[0].image} onClick={() => console.log(product[index].image)} />
-            <CardParagraph>This is a long title name containing lots of words</CardParagraph>
-            <RatingInfos className="dev">
+        {/* [code pagination] Se colocar allProducts ao invés de productsList a paginação funciona */}
+        { productsList?.map((product: any, key: any) => (
+          <Card key={product.id} onClick={() => console.log(product)}>
+            <CardImage src={product.productImage.url} />
+            <CardParagraph>{product.description}</CardParagraph>
+            <RatingInfos>
               <Stack spacing={1}>
-                <Rating name="half-rating-read" defaultValue={2.5} precision={0.5} readOnly />
+                <Rating name="half-rating-read" defaultValue={product.rating} precision={0.5} readOnly />
               </Stack>
-              <RatingText>2.5</RatingText>
+              <RatingText>{product.rating}</RatingText>
             </RatingInfos>
-            <PurchaseContainer className="dev" id="purchase-container">
-              <Price>$12.48</Price>
+            <PurchaseContainer id="purchase-container">
+              <Price>${product.price}</Price>
               <FormControl sx={{ width: 60  }}>
                 <InputLabel id="demo-simple-select-helper-label"></InputLabel>
                 <Select
@@ -141,17 +153,22 @@ const App = () => {
                 </Select>
               </FormControl>
             </PurchaseContainer>
-            <CardButton className="dev">Add to Cart</CardButton>
+            <CardButton >Add to Cart</CardButton>
           </Card>
         )) }
       </CardContainer>
+
+      <PaginationContainer>
+        <Stack spacing={2}>
+          <Pagination count={6} color="primary" page={currentPage} onChange={handlePage}/>
+        </Stack>
+      </PaginationContainer>
 
     </Container>
   );
 }
 
 export const Row = styled.div`
-  
 `
 
 export const Header = styled.header`
@@ -193,8 +210,8 @@ export const SearchAction = styled.div`
 `
 
 export const SearchButton = styled.button`
-  height: 42px;
-  width: 42px;
+  height: 40px;
+  width: 40px;
 
   cursor: pointer;
   outline: none;
@@ -256,6 +273,7 @@ export const CardImage = styled.img<CardProps>`
 `
 
 export const CardParagraph = styled.p`
+  height: 105px;
   font-size: 14px;
   line-height: 21px;
 `
@@ -302,6 +320,87 @@ export const CardButton = styled.button`
   font-size: 14px;
   line-height: 20px;
 `
+
+export const PaginationContainer = styled.div`
+  display: flex;
+  justify-content: center;
+`
+
+/* Opens: TemporaryDrawer */
+
+export const DrawerTitle = styled.p`
+  font-size: 14px;
+  line-height: 16px;
+  color:black;
+`
+
+export const DrawerClose = styled.p`
+  font-size: 24px;
+  font-weight: bold;
+
+  position: absolute;
+  top: 0;
+  right: 0;
+`
+
+export const DrawerBtnPrimary = styled.button`
+  font-size: 16px;
+  font-weight: 600;
+  color: #2264D1;
+  height: 40px;
+  width: 163px;
+  background-color: transparent;
+`
+
+export const DrawerBtnSecondary = styled(DrawerBtnPrimary)`
+  border: 1px solid #9DC2FF;
+`
+
+export const DrawerInfos = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+`
+
+export const DrawerActions = styled.div`
+  display: flex;
+  flex-direction: column;
+  padding-left: 24px;
+
+`
+
+export const DrawerButtons = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  
+`
+
+export const DrawerContainer = styled.div`
+  position: relative;
+
+  .box {
+    height: 52vh;
+  }
+
+  ${DrawerClose} {
+    margin-right: 24px;
+    margin-top: 20px;
+  }
+
+  ${DrawerTitle} {
+    margin-top: 20px;
+    margin-bottom: 40px;
+  }
+
+  ${DrawerButtons} {
+    margin-right: 24px;
+    margin-bottom: 24px;
+  }
+`
+
+/* Closes: TemporaryDrawer*/
 
 export const Container = styled.div`
   display: flex;
@@ -356,6 +455,11 @@ export const Container = styled.div`
 
   ${CardButton} {
     margin-bottom: 16px;
+  }
+
+  ${PaginationContainer} {
+    margin-top: 24px;
+    margin-bottom: 36px;
   }
 `
 
