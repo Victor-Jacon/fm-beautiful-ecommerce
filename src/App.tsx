@@ -8,8 +8,7 @@ import Hamburger from 'hamburger-react'
 
 /* Filter + Context */
 import { TemporaryDrawer } from './components/TemporaryDrawer';
-import { ProductContext } from './providers/product'
-import { ProductContextType } from './providers//product'
+import { FilterContext, FilterContextType, SortContext, SortContextType } from './providers/sort'
 
 /* Sort[1] */
 import { Select, SelectChangeEvent } from '@material-ui/core'
@@ -26,26 +25,49 @@ import { Pagination } from '@material-ui/core' // [Pag 1]
 
 /* DATO CMS */
 import { useQuery } from "graphql-hooks";
-const PRODUCTS_QUERY = `query Products($first: IntType, $skip: IntType) {
-  allProducts(first: $first, skip: $skip) {
-    id
-    title
-    productImage {
-      url(imgixParams: {fm: jpg })
-    }
-    description
-    rating
-    price
-  }
-}`;
+const PRODUCTS_QUERY = 
+  `query 
+
+    Products(
+      $first: IntType, 
+      $skip: IntType, 
+      $orderBy: ProductModelOrderBy,
+      $minRating: FloatType,
+      $minPrice: FloatType,
+      $maxPrice: FloatType,
+    ) 
+
+    {
+
+      allProducts(
+        first: $first, 
+        skip: $skip,
+        orderBy: [$orderBy],
+        filter: {
+          rating: { gte: $minRating},
+          price: { gte: $minPrice, lte: $maxPrice },
+        }
+      ) 
+
+        {
+          id
+          title
+          productImage {
+            url(imgixParams: {fm: jpg })
+          }
+          description
+          rating
+          price
+        }
+
+    }`;
 
 const App = () => {
   const [hamburgerOpen, setHamburgerOpen] = useState(false);
 
-  const [sort, setSort] = useState('');
+  // [Context]
+  const { sort, setSort } = React.useContext(SortContext) as SortContextType; // [Context 5]
   const handleSorting = (event: SelectChangeEvent) => setSort(event.target.value);
-  
-  const { productsList, setProductsList } = React.useContext(ProductContext) as ProductContextType;
 
   /* Card */
   const [qty, setQty] = useState('1');
@@ -56,10 +78,19 @@ const App = () => {
   const [objsPerPage, setObjsPerPage] = useState(6) // there are 14 objects. It should return 2 pages with 6 + 1 page with 1.
   const [currentPage, setCurrentPage] = useState(1)
 
+  // Filter
+  const { maxPriceFilter, setMaxPriceFilter } = React.useContext(FilterContext) as FilterContextType;
+  const { minPriceFilter, setMinPriceFilter } = React.useContext(FilterContext) as FilterContextType;
+  const { minRatingFilter, setMinRatingFilter } = React.useContext(FilterContext) as FilterContextType; 
+
   const { loading, error, data } = useQuery(PRODUCTS_QUERY, {
     variables: {
       first: objsPerPage, // How many objects to return
       skip: skipCount, // Offset at which to start
+      orderBy: sort, // what sort will be used
+      minRating: minRatingFilter,
+      minPrice: minPriceFilter,
+      maxPrice: maxPriceFilter,
     }
   });
 
@@ -68,7 +99,7 @@ const App = () => {
   if (loading && !data) return <div>Loading</div>
 
   // saving query data to variable +/ creating pagination logic
-  // const { allProducts, _allProductsMeta } = data
+  const { allProducts, _allProductsMeta } = data
 
   const handlePage = (event: React.ChangeEvent<unknown>, value: number) => {
     setCurrentPage(value);
@@ -77,19 +108,6 @@ const App = () => {
     setSkipCount(newSkip);
     // [code pagination] neste momento o useQuery executa novamente e salva dentro de allProducts o novo valor. Se eu passar um setProducts do state, ele não atualiza.
   }
-
-  const testProductArray = [
-    {
-        "id":"70788059",
-        "title":"Forest Gump Shoes",
-        "productImage":{
-          "url":"https://www.datocms-assets.com/58030/1636297575-image1.png?fm=jpg"
-        },
-        "description":"amazing forest gump shoes",
-        "rating":2,
-        "price":13.48
-    },
-  ]
 
   return (
     <Container id="container">
@@ -106,16 +124,16 @@ const App = () => {
       </Header>
 
       <FilterContainer>
-        <FormControl sx={{ width: 164 }}>
-          <InputLabel id="demo-simple-select-helper-label">SORT BY</InputLabel>
+        <FormControl sx={{ width: 164 }} id="form-control">
+          <InputLabel id="sort-by demo-simple-select-helper-label">SORT BY</InputLabel>
           <Select
             labelId="demo-simple-select-helper-label"
             value={sort}
             label="SORT BY"
             onChange={handleSorting}
           >
-            <MenuItem sx={{ fontSize: 14 }} value="rating">Rating</MenuItem>
-            <MenuItem sx={{ fontSize: 14 }} value='price'>Price</MenuItem>
+          <MenuItem sx={{ fontSize: 14 }} value="rating_DESC">Rating</MenuItem>
+          <MenuItem sx={{ fontSize: 14 }} value="price_DESC">Price</MenuItem>
           </Select>
         </FormControl>
 
@@ -124,10 +142,9 @@ const App = () => {
         </FilterActions>
       </FilterContainer>
 
-      <button onClick={() => setProductsList(testProductArray)}>teste</button>
       <CardContainer>
         {/* [code pagination] Se colocar allProducts ao invés de productsList a paginação funciona */}
-        { productsList?.map((product: any, key: any) => (
+        { allProducts?.map((product: any, key: any) => (
           <Card key={product.id} onClick={() => console.log(product)}>
             <CardImage src={product.productImage.url} />
             <CardParagraph>{product.description}</CardParagraph>

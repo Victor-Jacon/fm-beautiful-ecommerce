@@ -1,12 +1,11 @@
 import React, { useState } from 'react'
 
-// [Context 1]
 export const ProductContext = React.createContext({});
 
 export interface ProductContextType {
    productsList: any;
    setProductsList:(array: any) => void
- }
+}
 
 export const ProductProvider = (props: any) => {
   const [productsList, setProductsList] = useState([

@@ -3,16 +3,18 @@ import ReactDOM from 'react-dom';
 import App from './App';
 import { GraphQLClient, ClientContext } from 'graphql-hooks';
 import { client } from './service/datocms'
-import { ProductProvider } from './providers/product';
+import { SortProvider, FilterProvider } from './providers/sort';
 
-// [Context 2]
+// [Context 4]
 ReactDOM.render(
   <React.StrictMode>
-    <ProductProvider>
-      <ClientContext.Provider value={client}>
-        <App />
-      </ClientContext.Provider>
-    </ProductProvider>
+    <FilterProvider>
+      <SortProvider>
+        <ClientContext.Provider value={client}>
+          <App />
+        </ClientContext.Provider>
+      </SortProvider>
+    </FilterProvider>
   </React.StrictMode>,
   document.getElementById('root')
 );
