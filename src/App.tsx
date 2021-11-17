@@ -66,37 +66,38 @@ const App = () => {
   const [hamburgerOpen, setHamburgerOpen] = useState(false);
 
   // [Context]
-  const { sort, setSort } = React.useContext(SortContext) as SortContextType; // [Context 5]
-  const handleSorting = (event: SelectChangeEvent) => setSort(event.target.value);
+    const { sort, setSort } = React.useContext(SortContext) as SortContextType; // [Context 5]
+    const handleSorting = (event: SelectChangeEvent) => setSort(event.target.value);
 
   /* Card */
-  const [qty, setQty] = useState('1');
-  const handleQty = (event: SelectChangeEvent) => setQty(event.target.value);
+    const [qty, setQty] = useState('1');
+    const handleQty = (event: SelectChangeEvent) => setQty(event.target.value);
 
   /* DATO CMS + Pagination */
-  const [skipCount, setSkipCount] = useState(0) 
-  const [objsPerPage, setObjsPerPage] = useState(6) // there are 14 objects. It should return 2 pages with 6 + 1 page with 1.
-  const [currentPage, setCurrentPage] = useState(1)
+    const [skipCount, setSkipCount] = useState(0) 
+    const [objsPerPage, setObjsPerPage] = useState(6) // there are 14 objects. It should return 2 pages with 6 + 1 page with 1.
+    const [currentPage, setCurrentPage] = useState(1)
 
   // Filter
-  const { maxPriceFilter, setMaxPriceFilter } = React.useContext(FilterContext) as FilterContextType;
-  const { minPriceFilter, setMinPriceFilter } = React.useContext(FilterContext) as FilterContextType;
-  const { minRatingFilter, setMinRatingFilter } = React.useContext(FilterContext) as FilterContextType; 
+    const { maxPriceFilter, setMaxPriceFilter } = React.useContext(FilterContext) as FilterContextType;
+    const { minPriceFilter, setMinPriceFilter } = React.useContext(FilterContext) as FilterContextType;
+    const { minRatingFilter, setMinRatingFilter } = React.useContext(FilterContext) as FilterContextType; 
 
-  const { loading, error, data } = useQuery(PRODUCTS_QUERY, {
-    variables: {
-      first: objsPerPage, // How many objects to return
-      skip: skipCount, // Offset at which to start
-      orderBy: sort, // what sort will be used
-      minRating: minRatingFilter,
-      minPrice: minPriceFilter,
-      maxPrice: maxPriceFilter,
-    }
-  });
+  // DatoCMS Query
+    const { loading, error, data } = useQuery(PRODUCTS_QUERY, {
+      variables: {
+        first: objsPerPage, // How many objects to return
+        skip: skipCount, // Offset at which to start
+        orderBy: sort, // what sort will be used
+        minRating: minRatingFilter,
+        minPrice: minPriceFilter,
+        maxPrice: maxPriceFilter,
+      }
+    });
 
   // QA
-  if (error) return <div>There was an error!</div>
-  if (loading && !data) return <div>Loading</div>
+    if (error) return <div>There was an error!</div>
+    if (loading && !data) return <div>Loading</div>
 
   // saving query data to variable +/ creating pagination logic
   const { allProducts, _allProductsMeta } = data
@@ -143,7 +144,6 @@ const App = () => {
       </FilterContainer>
 
       <CardContainer>
-        {/* [code pagination] Se colocar allProducts ao invés de productsList a paginação funciona */}
         { allProducts?.map((product: any, key: any) => (
           <Card key={product.id} onClick={() => console.log(product)}>
             <CardImage src={product.productImage.url} />
